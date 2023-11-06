@@ -13,16 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-          az --version
-        env:
-          AZURE_EXTENSION_DIR: /opt/azure-cli
-
-      - name: Log in to Azure
-        run: az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-
       - name: Install New Relic Infrastructure Agent
         run: |
           curl -o newrelic-infra.deb https://download.newrelic.com/infrastructure_agent/linux/apt/pool/main/n/newrelic-infra/newrelic-infra_1.20.0_amd64.deb
@@ -33,6 +23,3 @@ jobs:
           sudo systemctl start newrelic-infra
         env:
           NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
-
-      - name: Log out from Azure
-        run: az logout
