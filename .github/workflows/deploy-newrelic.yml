@@ -9,6 +9,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -16,17 +20,11 @@ jobs:
       - name: Install New Relic Agent
         run: |
           bash ./scripts/install-newrelic.sh
-        env:
-          DEBIAN_FRONTEND: noninteractive
 
       - name: Configure New Relic Agent
         run: |
           bash ./scripts/configure-newrelic.sh
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        secrets:
-          NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
 
       - name: Start New Relic Agent
-        run: bash ./scripts/start-newrelic.sh
-
+        run: |
+          bash ./scripts/start-newrelic.sh
