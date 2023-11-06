@@ -13,13 +13,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install New Relic Infrastructure Agent
+      - name: Install Azure CLI
         run: |
-          curl -o newrelic-infra.deb https://download.newrelic.com/infrastructure_agent/linux/apt/pool/main/n/newrelic-infra/newrelic-infra_1.20.0_amd64.deb
-          sudo dpkg -i newrelic-infra.deb
-          sudo apt-get update
-          sudo apt-get install newrelic-infra -y
-          sudo systemctl enable newrelic-infra
-          sudo systemctl start newrelic-infra
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+          az --version
+        env:
+          AZURE_EXTENSION_DIR: /opt/azure-cli
+
+      - name: Log in to Azure
+        run: az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+      - name: Download New Relic Infrastructure Agent
+        run: |
+          curl -o newrelic-infra.tar.gz https://download.newrelic.com/infrastructure_agent/binaries/linux/amd64/newrelic-infra-linux-amd64.tar.gz
+          tar xzf newrelic-infra.tar.gz
+          cd newrelic-infra
+          sudo ./nri-metadata-limits
+          sudo mv newrelic-infra /usr/bin/
+          sudo mv nri-metadata-limits /usr/bin/
         env:
           NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+
+      - name: Log out from Azure
+        run: az logout
