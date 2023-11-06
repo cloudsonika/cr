@@ -1,4 +1,4 @@
-name: Deploy New Relic Agent
+name: Deploy New Relic Agent to Azure VM
 
 on:
   push:
@@ -9,22 +9,33 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      DEBIAN_FRONTEND: noninteractive
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Install New Relic Agent
-        run: |
-          bash ./scripts/install-newrelic.sh
+    - name: Install sshpass
+      run: sudo apt-get -y install sshpass
 
-      - name: Configure New Relic Agent
-        run: |
-          bash ./scripts/configure-newrelic.sh
+    - name: Copy New Relic agent to Azure VM
+      run: |
+        sshpass -p ${{ secrets.SSH_PASSWORD }} scp path/to/newrelic-agent-linux.tar.gz Sonika@20.2.241.160:~/newrelic-agent-linux.tar.gz
+        # Replace "path/to/newrelic-agent-linux.tar.gz" with the actual path of the New Relic agent installer
+        # Replace "username" with your Azure VM username
+        # Replace "azure-vm-ip" with your Azure VM's public IP address or hostname
 
-      - name: Start New Relic Agent
-        run: |
-          bash ./scripts/start-newrelic.sh
+    - name: Connect to Azure VM
+      run: |
+        sshpass -p ${{ secrets.SSH_PASSWORD }} ssh Sonika@20.2.241.160 "cd ~ && tar -zxvf newrelic-agent-linux.tar.gz"
+
+    - name: Install New Relic agent
+      run: |
+        sshpass -p ${{ secrets.SSH_PASSWORD }} ssh Sonika@20.2.241.160 "sudo bash ~/newrelic-agent-linux/install.sh"
+        # You might need to adjust the path to the installer script if it's different
+
+    - name: Start New Relic agent
+      run: |
+        sshpass -p ${{ secrets.SSH_PASSWORD }} ssh Sonika@20.2.241.160 "sudo systemctl start newrelic-infra"
+
+    - name: Verify New Relic agent status
+      run: |
+        sshpass -p ${{ secrets.SSH_PASSWORD }} ssh Sonika@20.2.241.160 "sudo systemctl status newrelic-infra"
