@@ -1,4 +1,4 @@
-name: Deploy New Relic Agent
+name: Deploy New Relic Agent to Azure VM
 
 on:
   push:
@@ -36,4 +36,3 @@ jobs:
 
       - name: Log out from Azure
         run: az logout
-
