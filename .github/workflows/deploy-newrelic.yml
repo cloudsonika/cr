@@ -21,7 +21,8 @@ jobs:
           AZURE_EXTENSION_DIR: /opt/azure-cli
 
       - name: Log in to Azure
-        run: az login --username ${{ secrets.AZURE_USERNAME }} --password ${{ secrets.AZURE_PASSWORD }}
+        run: az login --username ${{ secrets.AZURE_USERNAME }} --password ${{ secrets.AZURE_PASSWORD }} --tenant 214f88a1-40cd-470f-853a-d15dad4e436b
+        # Replace <your-tenant-id> with your Azure Active Directory tenant ID
 
       - name: Install New Relic Infrastructure Agent
         run: |
