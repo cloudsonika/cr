@@ -1,41 +1,41 @@
-name: Deploy New Relic Agent to Azure VM
+name: Install New Relic Agent
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-    - name: Install sshpass
-      run: sudo apt-get -y install sshpass
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
 
-    - name: Copy New Relic agent to Azure VM
-      run: |
-        sshpass -p ${{ secrets.SSH_PASSWORD }} scp path/to/newrelic-agent-linux.tar.gz Sonika@20.2.241.160:~/newrelic-agent-linux.tar.gz
-        # Replace "path/to/newrelic-agent-linux.tar.gz" with the actual path of the New Relic agent installer
-        # Replace "username" with your Azure VM username
-        # Replace "azure-vm-ip" with your Azure VM's public IP address or hostname
+      - name: Install New Relic agent
+        run: pip install newrelic-infra
 
-    - name: Connect to Azure VM
-      run: |
-        sshpass -p ${{ secrets.SSH_PASSWORD }} ssh Sonika@20.2.241.160 "cd ~ && tar -zxvf newrelic-agent-linux.tar.gz"
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Install New Relic agent
-      run: |
-        sshpass -p ${{ secrets.SSH_PASSWORD }} ssh Sonika@20.2.241.160 "sudo bash ~/newrelic-agent-linux/install.sh"
-        # You might need to adjust the path to the installer script if it's different
+      - name: Connect to Azure VM
+        uses: azure/connect-to-vm@v3
+        with:
+          vm-name: ${{ secrets.AZURE_VM_NAME }}
+          vm-resource-group: ${{ secrets.AZURE_VM_RESOURCE_GROUP }}
 
-    - name: Start New Relic agent
-      run: |
-        sshpass -p ${{ secrets.SSH_PASSWORD }} ssh Sonika@20.2.241.160 "sudo systemctl start newrelic-infra"
+      - name: Install New Relic agent on Azure VM
+        run: |
+          sudo pip install newrelic-infra
 
-    - name: Verify New Relic agent status
-      run: |
-        sshpass -p ${{ secrets.SSH_PASSWORD }} ssh Sonika@20.2.241.160 "sudo systemctl status newrelic-infra"
+          sudo systemctl start newrelic-infra
+
+      - name: Verify New Relic agent is running
+        run: |
+          sudo systemctl status newrelic-infra     
