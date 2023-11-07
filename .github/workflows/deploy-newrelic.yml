@@ -13,11 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install New Relic agent on the runner machine
-        run: |
-          pip install newrelic-infra
-          sudo systemctl start newrelic-infra
-
       - name: Set up Azure CLI
         uses: azure/login@v1
         with:
@@ -25,9 +20,12 @@ jobs:
 
       - name: Connect to Azure VM and install New Relic agent
         run: |
-          az vm extension set --resource-group ${{ secrets.AZURE_VM_RESOURCE_GROUP }} --vm-name ${{ secrets.AZURE_VM_NAME }} --name CustomScript --publisher Microsoft.Azure.Extensions --version 2.0 --settings '{"script":"pip install newrelic-infra && sudo systemctl start newrelic-infra"}'
-          
+          # Download the New Relic Infrastructure agent installer script
+          wget https://download.newrelic.com/infrastructure_agent/linux/newrelic-infra-linux-latest.tar.gz
+          tar -xvzf newrelic-infra-linux-latest.tar.gz
+
+          # Install the New Relic Infrastructure agent
+          sudo bash newrelic-infra-linux-*.sh
+
     env:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      AZURE_VM_RESOURCE_GROUP: ${{ secrets.AZURE_VM_RESOURCE_GROUP }}
-      AZURE_VM_NAME: ${{ secrets.AZURE_VM_NAME }}
