@@ -13,22 +13,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Azure CLI
+      - name: Install New Relic agent on the runner machine
         run: |
-          az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          
+          pip install newrelic-infra
+          sudo systemctl start newrelic-infra
+
       - name: Connect to Azure VM and install New Relic agent
         run: |
-          # Download the New Relic Infrastructure agent installer script
-          wget https://download.newrelic.com/infrastructure_agent/linux/newrelic-infra-linux-latest.tar.gz
-          tar -xvzf newrelic-infra-linux-latest.tar.gz
+          # Install SSHpass for password-based SSH authentication
+          sudo apt-get install -y sshpass
 
-          # Install the New Relic Infrastructure agent
-          sudo bash newrelic-infra-linux-*.sh
+          # Connect to Azure VM and install New Relic agent using SSH password
+          sshpass -p ${{ secrets.AZURE_VM_PASSWORD }} ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} "pip install newrelic-infra && sudo systemctl start newrelic-infra"
 
     env:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
+      AZURE_VM_USER: ${{ secrets.AZURE_VM_USER }}
