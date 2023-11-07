@@ -1,4 +1,4 @@
-name: Install New Relic Agent
+name: Deploy New Relic Agent to Azure VM
 
 on:
   push:
@@ -6,26 +6,25 @@ on:
       - main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install New Relic agent on the runner machine
+      - name: Set up Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy New Relic Agent to Azure VM
         run: |
-          pip install newrelic-infra
-          sudo systemctl start newrelic-infra
+          # Install the New Relic agent on your Azure VM
+          # Replace <your_license_key> with your New Relic license key
+          # Replace <your_vm_ip> with the IP address of your Azure VM
 
-      - name: Connect to Azure VM and install New Relic agent
-        run: |
-          # Install SSHpass for password-based SSH authentication
-          sudo apt-get install -y sshpass
-
-          # Connect to Azure VM and install New Relic agent using SSH password
-          sshpass -p ${{ secrets.AZURE_VM_PASSWORD }} ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} "pip install newrelic-infra && sudo systemctl start newrelic-infra"
-
-    env:
-      AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
-      AZURE_VM_USER: ${{ secrets.AZURE_VM_USER }}
+          ssh azureuser@20.2.241.160 'bash -s' < scripts/install_newrelic.sh ae4f67198be65ab783366eb38e896e27FFFFNRAL
+        shell: bash
+        env:
+          AZUREVM_SSH_KEY: ${{ secrets.AZURE_VM_SSH_KEY }}
