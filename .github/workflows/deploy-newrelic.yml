@@ -2,40 +2,32 @@ name: Install New Relic Agent
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.8'
+      - name: Install New Relic agent on the runner machine
+        run: |
+          pip install newrelic-infra
+          sudo systemctl start newrelic-infra
 
-      - name: Install New Relic agent
-        run: pip install newrelic-infra
-
-      - name: Login to Azure
+      - name: Set up Azure CLI
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Connect to Azure VM
-        uses: azure/connect-to-vm@v3
-        with:
-          vm-name: ${{ secrets.AZURE_VM_NAME }}
-          vm-resource-group: ${{ secrets.AZURE_VM_RESOURCE_GROUP }}
-
-      - name: Install New Relic agent on Azure VM
+      - name: Connect to Azure VM and install New Relic agent
         run: |
-          sudo pip install newrelic-infra
-
-          sudo systemctl start newrelic-infra
-
-      - name: Verify New Relic agent is running
-        run: |
-          sudo systemctl status newrelic-infra     
+          az vm extension set --resource-group ${{ secrets.AZURE_VM_RESOURCE_GROUP }} --vm-name ${{ secrets.AZURE_VM_NAME }} --name CustomScript --publisher Microsoft.Azure.Extensions --version 2.0 --settings '{"script":"pip install newrelic-infra && sudo systemctl start newrelic-infra"}'
+          
+    env:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_VM_RESOURCE_GROUP: ${{ secrets.AZURE_VM_RESOURCE_GROUP }}
+      AZURE_VM_NAME: ${{ secrets.AZURE_VM_NAME }}
