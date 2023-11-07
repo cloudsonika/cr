@@ -13,7 +13,7 @@ sudo apt-get update
 sudo apt-get install newrelic-infra -y
 
 # Set your New Relic license key
-sudo newrelic-infra-config set license_key=<your_license_key>
+sudo newrelic-infra-config set license_key=ae4f67198be65ab783366eb38e896e27FFFFNRAL
 
 # Start the New Relic Infrastructure Agent
 sudo systemctl start newrelic-infra
